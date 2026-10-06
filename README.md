@@ -1,44 +1,57 @@
 # Ano Anime Studio
 
-A browser-first anime post-production workspace for original videos.
+Production workspace for original anime episodes: silent video + script → persistent character voices → editable dialogue/SFX/music timeline → final MP4.
 
-## Current build
-- Upload a silent anime video.
-- Preview it locally.
-- Paste a screenplay/dialogue script.
-- Detect scene blocks and dialogue lines.
-- Select a commercial-use voice/audio policy.
-- Generate a production audio plan.
-- No copyrighted anime clips, music, SFX, or voices are bundled.
+## Implemented
+- Silent video upload and preview.
+- Script parsing into dialogue segments.
+- Persistent character voice profiles and voice-lock state.
+- Separate dialogue, SFX and music timeline tracks.
+- Per-segment preview, edit, timing, volume, mute, remove and regenerate workflow.
+- Version/revision model in Supabase.
+- Secure Supabase Edge Function adapter for TTS and rendering providers.
+- Dark green/olive responsive UI.
 
-## Important licensing design
-This app deliberately does not scrape or automatically download random "no copyright" media. For monetized YouTube work, connect only providers/assets whose current license explicitly permits your intended commercial use.
+## Real generation/rendering
 
-The app cannot guarantee YouTube Partner Program approval. YouTube evaluates the finished channel/content for originality and repetitive or mass-produced content.
+The browser must not contain provider secrets or perform long 1-hour+ renders. The Supabase Edge Function `ano-anime-audio-api` is the secure adapter.
 
-## Full renderer architecture
-GitHub Pages can host the frontend, but long video rendering and private API keys should not run in browser code. Add a server-side rendering endpoint (Supabase Edge Function, Cloudflare Worker plus a rendering service, or another backend) and store provider keys as server secrets.
+Set these Supabase Edge Function secrets:
+- `TTS_PROVIDER_URL`
+- `TTS_PROVIDER_KEY`
+- `RENDER_PROVIDER_URL`
+- `RENDER_PROVIDER_KEY`
 
-Recommended API contract:
-- POST /api/analyze — receives video metadata + script, returns scene/audio cues.
-- POST /api/voice — sends dialogue to a TTS provider whose plan explicitly permits commercial use.
-- POST /api/assets — selects only user-owned or commercially licensed music/SFX.
-- POST /api/render — combines the original video with generated dialogue, SFX and music using a server-side media renderer.
-- GET /api/render/:id — returns render status and final MP4.
+Never put these values in `index.html`, `app.js`, or GitHub.
 
-Never put provider API keys in index.html or app.js.
+Google Cloud Text-to-Speech is a practical TTS starting point. Current Google documentation lists monthly free character allowances for Standard and WaveNet voices and permits generated audio in applications/media subject to Google Cloud terms. Custom/instant voice is separate, so free voice cloning should not be assumed.
 
-## Safe production rules
-1. Use original characters, scripts and video.
-2. Do not import clips/OSTs from existing anime.
-3. Do not scrape YouTube/TikTok audio.
-4. Do not use a voice clone unless you own the voice or have explicit permission.
-5. Keep a license/source record for every external music/SFX/voice asset.
-6. Prefer assets explicitly licensed for commercial use.
-7. Keep final videos meaningfully edited and story-driven; AI assistance alone does not guarantee monetization.
+Shotstack provides a REST video/audio editing API with a free new-account allowance for testing and paid production credits. Commercial API rendering is supported; submitted media/assets still need proper rights.
 
-## Local run
-Open index.html directly for the browser-only prototype, or serve the folder with any static web server.
+Free allowances are suitable for testing; long 60–90 minute episodes will normally require additional capacity.
+
+## Voice consistency
+
+A character profile stores the provider voice ID and settings. Regenerating one line reuses that profile, so the rest of the episode is not regenerated and the character voice remains consistent.
+
+Only clone a voice you own or have explicit permission to use commercially.
+
+## Licensed audio
+
+Do not scrape YouTube/TikTok or random “no copyright” sites. Use your own audio or assets with a license that permits your intended commercial YouTube use.
+
+## YouTube
+
+No provider can guarantee YPP approval. Keep the story, characters, direction, editing, sound design and final episode meaningfully original.
+
+## Supabase data model
+- `anime_projects`
+- `characters`
+- `episodes`
+- `episode_versions`
+- `audio_segments`
+- `segment_revisions`
 
 ## Deployment
-The repository is ready for GitHub Pages as a frontend prototype. A backend is required for the requested automatic voice/SFX/music generation and final MP4 rendering.
+
+Frontend can be hosted on GitHub Pages. Provider credentials remain in Supabase secrets.
